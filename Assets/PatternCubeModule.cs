@@ -15,6 +15,8 @@ public class PatternCubeModule : MonoBehaviour
     public KMBombModule Module;
     public KMAudio Audio;
 
+    public Mesh[] NetMeshes;
+
     private static int _moduleIdCounter = 1;
     private int _moduleId;
 

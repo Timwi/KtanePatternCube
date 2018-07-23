@@ -50,6 +50,16 @@ namespace PatternCube
                         return false;
             return true;
         }
+        public string ID
+        {
+            get
+            {
+                return string.Join("\n",
+                    Enumerable.Range(0, Faces.GetLength(1)).Select(y =>
+                        string.Join("",
+                            Enumerable.Range(0, Faces.GetLength(0)).Select(x => Faces[x, y] == null ? "_" : "X").ToArray())).ToArray());
+            }
+        }
     }
 
     static class Data
@@ -15933,7 +15943,7 @@ namespace PatternCube
             new Net(new FaceInfo[4, 3] { { null, new FaceInfo(2, 0), new FaceInfo(5, 1) }, { null, new FaceInfo(3, 0), null }, { new FaceInfo(0, 3), new FaceInfo(4, 0), null }, { null, new FaceInfo(1, 0), null } }),
             new Net(new FaceInfo[4, 3] { { null, new FaceInfo(2, 0), null }, { null, new FaceInfo(3, 0), new FaceInfo(5, 0) }, { new FaceInfo(0, 3), new FaceInfo(4, 0), null }, { null, new FaceInfo(1, 0), null } }),
             new Net(new FaceInfo[4, 3] { { null, new FaceInfo(2, 0), null }, { null, new FaceInfo(3, 0), null }, { new FaceInfo(0, 3), new FaceInfo(4, 0), new FaceInfo(5, 3) }, { null, new FaceInfo(1, 0), null } })
-            
+
             // Nets-end
         };
     }
