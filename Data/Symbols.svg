@@ -14,7 +14,10 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="Symbols.svg">
+   sodipodi:docname="Symbols.svg"
+   inkscape:export-filename="D:\c\KTANE\PatternCube\Data\Symbols.png"
+   inkscape:export-xdpi="360"
+   inkscape:export-ydpi="360">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -22,10 +25,10 @@
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0.0"
+     inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.5780999"
-     inkscape:cx="240.9647"
+     inkscape:cx="127.53716"
      inkscape:cy="115.31129"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -92,7 +95,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
