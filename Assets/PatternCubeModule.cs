@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using PatternCube;
@@ -41,6 +41,9 @@ public class PatternCubeModule : MonoBehaviour
     private readonly List<int> _facesRevealed = new List<int>();
     private Dictionary<char, Texture> _symbolTextures;
 
+    private sealed class RotateTask { public int From; public int To; }
+    private readonly Queue<RotateTask>[] _queues = new Queue<RotateTask>[5];
+
     void Start()
     {
         _moduleId = _moduleIdCounter++;
@@ -50,6 +53,8 @@ public class PatternCubeModule : MonoBehaviour
             _selectableSymbolObjs[i] = SelectableBoxes[i].transform.Find("Symbol").GetComponent<MeshRenderer>();
             _selectableFrameObjs[i] = SelectableBoxes[i].transform.Find("Frame").GetComponent<MeshRenderer>();
             _selectableScreenObjs[i] = SelectableBoxes[i].transform.Find("Screen").GetComponent<MeshRenderer>();
+            _queues[i] = new Queue<RotateTask>();
+            StartCoroutine(rotator(i));
         }
         for (int i = 0; i < 6; i++)
         {
@@ -61,6 +66,10 @@ public class PatternCubeModule : MonoBehaviour
         _symbolTextures = new Dictionary<char, Texture>();
         foreach (var tx in SymbolTextures)
             _symbolTextures[tx.name[6]] = tx;
+
+        //for (int i = 0; i < 25; i++)
+        //    if (i % 5 != 0)
+        //        MainSelectable.Children[i] = null;
 
         // Generate a puzzle
         _puzzle = Data.Nets[Rnd.Range(0, Data.Nets.Length)];
@@ -107,12 +116,10 @@ public class PatternCubeModule : MonoBehaviour
             _selectableSymbols[i] = new FaceSymbol(_selectableSymbols[i].Symbol, Rnd.Range(0, 4));
 
         // Populate the selectable boxes
-        MainSelectable.Children = new KMSelectable[25];
         for (int i = 0; i < 5; i++)
         {
-            MainSelectable.Children[i * 5] = SelectableBoxes[i];
             _selectableSymbolObjs[i].material.mainTexture = _symbolTextures[_selectableSymbols[i].Symbol];
-            _selectableSymbolObjs[i].transform.eulerAngles = new Vector3(90, _selectableSymbols[i].Orientation * 90, 0);
+            _selectableSymbolObjs[i].transform.localEulerAngles = new Vector3(90, _selectableSymbols[i].Orientation * 90, 0);
             _selectableFrameObjs[i].material = FrameRed;
             _selectableScreenObjs[i].material = _selectableSymbols[i].Symbol == _solution[_faceGivenByHighlight].Symbol ? ScreenLight : ScreenDark;
             SelectableBoxes[i].OnInteract = GetSelectableHandler(i);
@@ -139,10 +146,10 @@ public class PatternCubeModule : MonoBehaviour
                 _placeableScreenObjs[fi.Face].material = fi.Face == _faceGivenByHighlight ? ScreenLight : ScreenDark;
                 PlaceableBoxes[fi.Face].transform.localPosition = new Vector3(x1 + w * (x + 2), 0, y1 + h * (_puzzle.Faces.GetLength(1) - y - .5f)) * .1f;
                 PlaceableBoxes[fi.Face].OnInteract = GetPlaceableHandler(fi);
-                MainSelectable.Children[(5 - _puzzle.Faces.GetLength(1) + y) * 5 + x] = PlaceableBoxes[fi.Face];
+                //MainSelectable.Children[(5 - _puzzle.Faces.GetLength(1) + y) * 5 + x] = PlaceableBoxes[fi.Face];
             }
 
-        MainSelectable.UpdateChildren(SelectableBoxes[0]);
+        //MainSelectable.UpdateChildren(SelectableBoxes[0]);
 
         // Set the correct mesh for the module front
         var id = "ModuleFront_" + _puzzle.ID;
@@ -153,6 +160,28 @@ public class PatternCubeModule : MonoBehaviour
             _puzzle.Faces[x, y].Face == _faceGivenByHighlight ? _solution[_faceGivenByHighlight].Symbol.ToString() : "?").JoinString(";")).JoinString("|"));
         Log("Symbols=" + _solution.Select(s => s.Symbol).JoinString());
         Log("Solution=" + Enumerable.Range(0, _puzzle.Faces.GetLength(1)).Select(y => Enumerable.Range(0, _puzzle.Faces.GetLength(0)).Select(x => str(_puzzle.Faces[x, y])).JoinString(";")).JoinString("|"));
+    }
+
+    private IEnumerator rotator(int ix)
+    {
+        const float duration = .15f;
+
+        while (true)
+        {
+            yield return null;
+            if (_queues[ix].Count == 0)
+                continue;
+
+            var elem = _queues[ix].Dequeue();
+            var elapsed = 0f;
+            while (elapsed < duration)
+            {
+                yield return null;
+                elapsed += Time.deltaTime;
+                var t = easeOutSine(Mathf.Min(elapsed, duration), duration, 0, 1);
+                _selectableSymbolObjs[ix].transform.localRotation = Quaternion.Slerp(Quaternion.Euler(90, elem.From * 90, 0), Quaternion.Euler(90, elem.To * 90, 0), t);
+            }
+        }
     }
 
     private string str(FaceInfo fi)
@@ -203,6 +232,7 @@ public class PatternCubeModule : MonoBehaviour
                     Log("Symbol {0} placed correctly.", sym.Symbol);
                     _selectableSymbols[_lastSelectableIx] = null;
                     AssignSymbols();
+                    StartCoroutine(animatePlacedSymbol(sym.Symbol));
                     if (_selectableSymbols.All(s => s == null))
                     {
                         Log("Module solved.");
@@ -212,6 +242,35 @@ public class PatternCubeModule : MonoBehaviour
             }
             return false;
         };
+    }
+
+    private static float easeOutSine(float time, float duration, float from, float to)
+    {
+        return (to - from) * Mathf.Sin(time / duration * (Mathf.PI / 2)) + from;
+    }
+
+    private IEnumerator animatePlacedSymbol(char symbol)
+    {
+        var ix = -1;
+        for (int i = 0; i < 6; i++)
+            if (_solution[i].Symbol == symbol)
+            {
+                ix = i;
+                break;
+            }
+        if (ix == -1)
+            yield break;
+
+        const float duration = .25f;
+        var elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            var t = easeOutSine(Mathf.Min(elapsed, duration), duration, 0, 1);
+            _placeableSymbolObjs[ix].transform.localScale = Vector3.Lerp(new Vector3(.04f, .04f, .04f), new Vector3(.025f, .025f, .025f), t);
+            _placeableSymbolObjs[ix].transform.localPosition = Vector3.Lerp(new Vector3(0, .016f, 0), new Vector3(0, .01401f, 0), t);
+            yield return null;
+        }
     }
 
     private KMSelectable.OnInteractHandler GetSelectableHandler(int ix)
@@ -225,7 +284,9 @@ public class PatternCubeModule : MonoBehaviour
                 // The user clicked on a symbol that is already on the net; allow that and do nothing.
                 return false;
 
-            _selectableSymbols[ix] = new FaceSymbol(_selectableSymbols[ix].Symbol, (_selectableSymbols[ix].Orientation + 1) % 4);
+            var tsk = new RotateTask { From = _selectableSymbols[ix].Orientation, To = (_selectableSymbols[ix].Orientation + 1) % 4 };
+            _selectableSymbols[ix] = new FaceSymbol(_selectableSymbols[ix].Symbol, tsk.To);
+            _queues[ix].Enqueue(tsk);
             _lastSelectableIx = ix;
             AssignSymbols();
             return false;
@@ -237,9 +298,7 @@ public class PatternCubeModule : MonoBehaviour
         // Selectable boxes
         for (int i = 0; i < 5; i++)
         {
-            if (_selectableSymbols[i] != null)
-                _selectableSymbolObjs[i].transform.eulerAngles = new Vector3(90, _selectableSymbols[i].Orientation * 90, 0);
-            else
+            if (_selectableSymbols[i] == null)
                 _selectableSymbolObjs[i].gameObject.SetActive(false);
             _selectableFrameObjs[i].material = _selectableSymbols[i] == null ? FrameBlue : FrameRed;
             _selectableScreenObjs[i].material = _selectableSymbols[i] != null && _selectableSymbols[i].Symbol == _solution[_faceGivenByHighlight].Symbol ? ScreenLight : ScreenDark;
