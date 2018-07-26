@@ -111,7 +111,7 @@ public class PatternCubeModule : MonoBehaviour
         var faceGivenFully = (new[] { 0, 1, 4 }.Contains(_faceGivenByHighlight) ? new[] { 2, 3, 5 } : new[] { 0, 1, 4 })[Rnd.Range(0, 3)];
         _facesRevealed.Add(faceGivenFully);
         _solution = new[] { halfCube1.Top, halfCube1.Front, right, back, halfCube1.Left, bottom };
-        _selectableSymbols = _solution.Except(new[] { _solution[faceGivenFully], _solution[_faceGivenByHighlight] }).ToArray().Shuffle().Concat(new[] { _solution[_faceGivenByHighlight] }).ToArray();
+        _selectableSymbols = _solution.Except(new[] { _solution[faceGivenFully] }).ToArray().Shuffle();
         for (int i = 0; i < _selectableSymbols.Length; i++)
             _selectableSymbols[i] = new FaceSymbol(_selectableSymbols[i].Symbol, Rnd.Range(0, 4));
 
