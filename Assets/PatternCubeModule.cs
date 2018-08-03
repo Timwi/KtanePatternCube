@@ -155,12 +155,62 @@ public class PatternCubeModule : MonoBehaviour
         var id = "ModuleFront_" + _puzzle.ID;
         ModuleFront.mesh = NetMeshes.First(m => m.name == id);
 
-        Log("Puzzle=" + Enumerable.Range(0, _puzzle.Faces.GetLength(1)).Select(y => Enumerable.Range(0, _puzzle.Faces.GetLength(0)).Select(x =>
-            _puzzle.Faces[x, y] == null || _puzzle.Faces[x, y].Face == faceGivenFully ? str(_puzzle.Faces[x, y]) :
-            _puzzle.Faces[x, y].Face == _faceGivenByHighlight ? _solution[_faceGivenByHighlight].Symbol.ToString() : "?").JoinString(";")).JoinString("|"));
-        Log("Symbols=" + _solution.Select(s => s.Symbol).JoinString());
-        Log("Solution=" + Enumerable.Range(0, _puzzle.Faces.GetLength(1)).Select(y => Enumerable.Range(0, _puzzle.Faces.GetLength(0)).Select(x => str(_puzzle.Faces[x, y])).JoinString(";")).JoinString("|"));
+        Log(@"=svg[Puzzle:]<svg xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 {0}'>{1}</svg>",
+            /* {0} */ 120 * _puzzle.Faces.GetLength(1) + 6,
+            /* {1} */ Enumerable.Range(0, _puzzle.Faces.GetLength(1)).SelectMany(y => Enumerable.Range(0, _puzzle.Faces.GetLength(0)).Select(x =>
+                _puzzle.Faces[x, y] == null ? null :
+                _puzzle.Faces[x, y].Face == faceGivenFully ? svg(x, y, _solution[_puzzle.Faces[x, y].Face].Symbol, (_solution[_puzzle.Faces[x, y].Face].Orientation + _puzzle.Faces[x, y].Orientation) % 4) :
+                svg(x, y, highlighted: _puzzle.Faces[x, y].Face == _faceGivenByHighlight))).JoinString());
+
+        Log(@"=svg[Symbols:]<svg xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 126'>{0}</svg>",
+            _solution.Select((s, ix) => svgPath(ix, 0, s.Symbol, 0)).JoinString());
+
+        Log(@"=svg[Solution:]<svg xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 {0}'>{1}</svg>",
+            /* {0} */ 120 * _puzzle.Faces.GetLength(1) + 6,
+            /* {1} */ Enumerable.Range(0, _puzzle.Faces.GetLength(1)).SelectMany(y => Enumerable.Range(0, _puzzle.Faces.GetLength(0)).Select(x =>
+                _puzzle.Faces[x, y] == null ? null :
+                svg(x, y, _solution[_puzzle.Faces[x, y].Face].Symbol, (_solution[_puzzle.Faces[x, y].Face].Orientation + _puzzle.Faces[x, y].Orientation) % 4))).JoinString());
     }
+
+    private static string svg(int x, int y, char symbol = '\0', int orientation = -1, bool highlighted = false)
+    {
+        var rect = string.Format("<rect x='{0}' y='{1}' width='120' height='120' fill='{2}' stroke='black' stroke-width='2'/>", x * 120, y * 120, highlighted ? "#f88" : "none");
+        if (symbol == '\0')
+            return rect;
+        return rect + svgPath(x, y, symbol, orientation);
+    }
+    private static string svgPath(int x, int y, char symbol, int orientation)
+    {
+        var sy = _svgSymbols[symbol];
+        return string.Format("<path d='{5}' transform='translate({3}, {4}) rotate({2}) translate({0}, {1})'/>", -sy.X - 60, -sy.Y - 60, 90 * orientation, 120 * x + 60, 120 * y + 60, sy.SvgPath);
+    }
+
+    sealed class SvgSymbol
+    {
+        public string SvgPath { get; private set; }
+        public int X { get; private set; }
+        public int Y { get; private set; }
+        public SvgSymbol(int x, int y, string svgPath)
+        {
+            SvgPath = svgPath;
+            X = x;
+            Y = y;
+        }
+    }
+
+    private readonly static Dictionary<char, SvgSymbol> _svgSymbols = new Dictionary<char, SvgSymbol> {
+        { 'A', new SvgSymbol(0, 0, "M60 10a50 50 0 1 0 0 100 50 50 0 0 0 0-100zm0 10a40 40 0 0 1 40 40H20a40 40 0 0 1 40-40z") },
+        { 'B', new SvgSymbol(120, 0, "M180 10l-50 100h100z") },
+        { 'C', new SvgSymbol(240, 0, "M330 40a30 30 0 1 1-60 0 30 30 0 1 1 60 0zm-70 40h80v30h-80z") },
+        { 'D', new SvgSymbol(360, 0, "M420 10l-5.69 56.81-20.19-53.4 9.22 56.37L370 23.41C385 55 395 80 395 110h50c0-30 10-55 25-86.6l-33.34 46.38 9.21-56.37-20.18 53.4z") },
+        { 'E', new SvgSymbol(0, 120, "M20 140v80h80v-80H20zm40 10h30v30H60v-30z") },
+        { 'F', new SvgSymbol(120, 120, "M200 130a30 30 0 0 0-27.06 42.94l-40 40a10 10 0 1 0 14.12 14.12l40-40A30 30 0 1 0 200 130z") },
+        { 'G', new SvgSymbol(240, 120, "M300 130a20 20 0 1 0 0 40 20 20 0 0 0 0-40zm0 40a30 30 0 1 0 0 60 30 30 0 0 0 0-60zm0 10a20 20 0 1 1 0 40 20 20 0 0 1 0-40z") },
+        { 'H', new SvgSymbol(360, 120, "M380 140h80v80h-30v-50h-50z") },
+        { 'X', new SvgSymbol(0, 240, "M60 250l-50 50h100zm0 50l-50 50h100z") },
+        { 'Y', new SvgSymbol(120, 240, "M220 350v-10h-30l40-40-50-50-50 50 40 40h-30v10h80z") },
+        { 'Z', new SvgSymbol(240, 240, "M250 250h100l-40 40v60h-20v-60z") }
+    };
 
     private IEnumerator rotator(int ix)
     {
@@ -205,12 +255,12 @@ public class PatternCubeModule : MonoBehaviour
 
             if (_lastSelectableIx == -1)
             {
-                Log("You tried to place a symbol without selecting a symbol first. Strike.");
+                Log(" You tried to place a symbol without selecting a symbol first. Strike.");
                 Module.HandleStrike();
             }
             else if (_selectableSymbols[_lastSelectableIx] == null)
             {
-                Log("You tried to place a symbol that you already placed. Strike.");
+                Log(" You tried to place a symbol that you already placed. Strike.");
                 Module.HandleStrike();
             }
             else
@@ -218,24 +268,24 @@ public class PatternCubeModule : MonoBehaviour
                 var sym = _selectableSymbols[_lastSelectableIx];
                 if (sym.Symbol != _solution[fi.Face].Symbol)
                 {
-                    Log("You tried to place symbol {0} where symbol {1} should have gone. Strike.", sym.Symbol, _solution[fi.Face].Symbol);
+                    Log(" You tried to place symbol {0} where symbol {1} should have gone. Strike.", _solution.IndexOf(fs => fs.Symbol == sym.Symbol) + 1, fi.Face + 1);
                     Module.HandleStrike();
                 }
                 else if (sym.Orientation != (_solution[fi.Face].Orientation + fi.Orientation) % 4)
                 {
-                    Log("You tried to place symbol {0} in the correct place, but wrong orientation ({1} instead of {2}). Strike.", sym.Symbol, sym.Orientation, (_solution[fi.Face].Orientation + fi.Orientation) % 4);
+                    Log(" You tried to place symbol {0} in the correct place, but wrong orientation ({1} instead of {2}). Strike.", fi.Face + 1, "NESW"[sym.Orientation], "NESW"[(_solution[fi.Face].Orientation + fi.Orientation) % 4]);
                     Module.HandleStrike();
                 }
                 else
                 {
                     // Correct placement
-                    Log("Symbol {0} placed correctly.", sym.Symbol);
+                    Log(" Symbol {0} placed correctly.", fi.Face + 1);
                     _selectableSymbols[_lastSelectableIx] = null;
                     AssignSymbols();
                     StartCoroutine(animatePlacedSymbol(sym.Symbol));
                     if (_selectableSymbols.All(s => s == null))
                     {
-                        Log("Module solved.");
+                        Log(" Module solved.");
                         Module.HandlePass();
                     }
                 }
@@ -320,6 +370,6 @@ public class PatternCubeModule : MonoBehaviour
 
     void Log(string msg, params object[] fmtArgs)
     {
-        Debug.LogFormat(@"[Pattern Cube #{0}] {1}", _moduleId, string.Format(msg, fmtArgs));
+        Debug.LogFormat(@"[Pattern Cube #{0}]{1}", _moduleId, string.Format(msg, fmtArgs));
     }
 }
