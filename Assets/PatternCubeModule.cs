@@ -38,6 +38,7 @@ public class PatternCubeModule : MonoBehaviour
     private FaceSymbol[] _selectableSymbols;
     private int _faceGivenByHighlight;
     private int _lastSelectableIx = -1;
+    private int _highlightedPosition;   // for Souvenir
     private readonly List<int> _facesRevealed = new List<int>();
     private Dictionary<char, Texture> _symbolTextures;
 
@@ -113,7 +114,11 @@ public class PatternCubeModule : MonoBehaviour
         _solution = new[] { halfCube1.Top, halfCube1.Front, right, back, halfCube1.Left, bottom };
         _selectableSymbols = _solution.Except(new[] { _solution[faceGivenFully] }).ToArray().Shuffle();
         for (int i = 0; i < _selectableSymbols.Length; i++)
+        {
             _selectableSymbols[i] = new FaceSymbol(_selectableSymbols[i].Symbol, Rnd.Range(0, 4));
+            if (_selectableSymbols[i].Symbol == _solution[_faceGivenByHighlight].Symbol)
+                _highlightedPosition = i;
+        }
 
         // Populate the selectable boxes
         for (int i = 0; i < 5; i++)
@@ -163,7 +168,8 @@ public class PatternCubeModule : MonoBehaviour
                 svg(x, y, highlighted: _puzzle.Faces[x, y].Face == _faceGivenByHighlight))).JoinString());
 
         Log(@"=svg[Symbols:]<svg xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 126'>{0}</svg>",
-            _solution.Select((s, ix) => svgPath(ix, 0, s.Symbol, 0)).JoinString());
+            _selectableSymbols.Select((s, ix) => svgPath(ix, 0, s.Symbol, 0)).JoinString());
+        Log(@" The highlighted symbol is {0}.", "first,second,third,4th,5th".Split(',')[_highlightedPosition]);
 
         Log(@"=svg[Solution:]<svg xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 {0}'>{1}</svg>",
             /* {0} */ 120 * _puzzle.Faces.GetLength(1) + 6,
