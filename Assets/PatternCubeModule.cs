@@ -68,9 +68,9 @@ public class PatternCubeModule : MonoBehaviour
         foreach (var tx in SymbolTextures)
             _symbolTextures[tx.name[6]] = tx;
 
-        //for (int i = 0; i < 25; i++)
-        //    if (i % 5 != 0)
-        //        MainSelectable.Children[i] = null;
+        for (int i = 0; i < 25; i++)
+            if (i % 5 != 0)
+                MainSelectable.Children[i] = null;
 
         // Generate a puzzle
         _puzzle = Data.Nets[Rnd.Range(0, Data.Nets.Length)];
@@ -151,10 +151,10 @@ public class PatternCubeModule : MonoBehaviour
                 _placeableScreenObjs[fi.Face].material = fi.Face == _faceGivenByHighlight ? ScreenLight : ScreenDark;
                 PlaceableBoxes[fi.Face].transform.localPosition = new Vector3(x1 + w * (x + 2), 0, y1 + h * (_puzzle.Faces.GetLength(1) - y - .5f)) * .1f;
                 PlaceableBoxes[fi.Face].OnInteract = GetPlaceableHandler(fi);
-                //MainSelectable.Children[(5 - _puzzle.Faces.GetLength(1) + y) * 5 + x] = PlaceableBoxes[fi.Face];
+                MainSelectable.Children[(5 - _puzzle.Faces.GetLength(1) + y) * 5 + x + 1] = PlaceableBoxes[fi.Face];
             }
 
-        //MainSelectable.UpdateChildren(SelectableBoxes[0]);
+        MainSelectable.UpdateChildren(SelectableBoxes[0]);
 
         // Set the correct mesh for the module front
         var id = "ModuleFront_" + _puzzle.ID;
