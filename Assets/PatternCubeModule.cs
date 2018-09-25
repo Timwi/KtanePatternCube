@@ -439,7 +439,7 @@ public class PatternCubeModule : MonoBehaviour
             {
                 var ix = int.Parse(m.Groups[1].Value) - 1;
                 var cell = Array.IndexOf(_tpLetters, m.Groups[2].Value.ToUpperInvariant()[0]);
-                if (cell == -1)
+                if (cell == -1 || ix < 0 || ix >= 5)
                     yield break;
                 commands.Add(new Action(() => { if (_selected != ix) SelectableBoxes[ix].OnInteract(); }));
                 commands.Add(new Action(() => { if (_selected == ix) PlaceableBoxes[cell].OnInteract(); }));
@@ -449,6 +449,8 @@ public class PatternCubeModule : MonoBehaviour
             if (m.Success)
             {
                 var ix = int.Parse(m.Groups[1].Value) - 1;
+                if (ix < 0 || ix >= 5)
+                    yield break;
                 var rotation =
                     m.Groups[2].Value.Equals("cw", StringComparison.InvariantCultureIgnoreCase) ? 1 :
                     m.Groups[2].Value.Equals("ccw", StringComparison.InvariantCultureIgnoreCase) ? 3 : 2;
