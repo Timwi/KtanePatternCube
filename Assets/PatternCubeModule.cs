@@ -87,44 +87,44 @@ public class PatternCubeModule : MonoBehaviour
 
         // Generate a puzzle
         _puzzle = Data.Nets[Rnd.Range(0, Data.Nets.Length)];
-        _faceGivenByHighlight = Rnd.Range(0, 6);
-        HalfCube[] arrangement1, arrangement2;
+        HalfCube[] frontHalfCubes, backHalfCubes;
         if (Rnd.Range(0, 2) == 0)
         {
-            arrangement1 = Data.Group1;
-            arrangement2 = Data.Group2;
+            frontHalfCubes = Data.Group1;
+            backHalfCubes = Data.Group2;
         }
         else
         {
-            arrangement1 = Data.Group2;
-            arrangement2 = Data.Group1;
+            frontHalfCubes = Data.Group2;
+            backHalfCubes = Data.Group1;
         }
-        var halfCube1 = arrangement1[Rnd.Range(0, arrangement1.Length)];
-        var symbolsAlready = new[] { halfCube1.Top.Symbol, halfCube1.Left.Symbol, halfCube1.Front.Symbol };
-        var halfCube2Candidates = arrangement2.Where(ag => !new[] { ag.Top.Symbol, ag.Left.Symbol, ag.Front.Symbol }.Intersect(symbolsAlready).Any()).ToArray();
-        var halfCube2 = halfCube2Candidates[Rnd.Range(0, halfCube2Candidates.Length)];
+        var frontHalfCube = frontHalfCubes[Rnd.Range(0, frontHalfCubes.Length)];
+        var symbolsAlready = new[] { frontHalfCube.Top.Symbol, frontHalfCube.Left.Symbol, frontHalfCube.Front.Symbol };
+        var backHalfCubeCandidates = backHalfCubes.Where(ag => !new[] { ag.Top.Symbol, ag.Left.Symbol, ag.Front.Symbol }.Intersect(symbolsAlready).Any()).ToArray();
+        var backHalfCube = backHalfCubeCandidates[Rnd.Range(0, backHalfCubeCandidates.Length)];
         FaceSymbol right, back, bottom;
         switch (Rnd.Range(0, 3))
         {
             case 0:
-                back = new FaceSymbol(halfCube2.Front.Symbol, (halfCube2.Front.Orientation + 3) % 4);
-                right = new FaceSymbol(halfCube2.Top.Symbol, (halfCube2.Top.Orientation + 3) % 4);
-                bottom = new FaceSymbol(halfCube2.Left.Symbol, (halfCube2.Left.Orientation + 3) % 4);
+                back = new FaceSymbol(backHalfCube.Front.Symbol, (backHalfCube.Front.Orientation + 3) % 4);
+                right = new FaceSymbol(backHalfCube.Top.Symbol, (backHalfCube.Top.Orientation + 3) % 4);
+                bottom = new FaceSymbol(backHalfCube.Left.Symbol, (backHalfCube.Left.Orientation + 3) % 4);
                 break;
             case 1:
-                back = new FaceSymbol(halfCube2.Top.Symbol, halfCube2.Top.Orientation);
-                right = new FaceSymbol(halfCube2.Left.Symbol, (halfCube2.Left.Orientation + 1) % 4);
-                bottom = new FaceSymbol(halfCube2.Front.Symbol, halfCube2.Front.Orientation);
+                back = new FaceSymbol(backHalfCube.Top.Symbol, backHalfCube.Top.Orientation);
+                right = new FaceSymbol(backHalfCube.Left.Symbol, (backHalfCube.Left.Orientation + 1) % 4);
+                bottom = new FaceSymbol(backHalfCube.Front.Symbol, backHalfCube.Front.Orientation);
                 break;
             default:
-                back = new FaceSymbol(halfCube2.Left.Symbol, (halfCube2.Left.Orientation + 2) % 4);
-                right = new FaceSymbol(halfCube2.Front.Symbol, (halfCube2.Front.Orientation + 2) % 4);
-                bottom = new FaceSymbol(halfCube2.Top.Symbol, (halfCube2.Top.Orientation + 1) % 4);
+                back = new FaceSymbol(backHalfCube.Left.Symbol, (backHalfCube.Left.Orientation + 2) % 4);
+                right = new FaceSymbol(backHalfCube.Front.Symbol, (backHalfCube.Front.Orientation + 2) % 4);
+                bottom = new FaceSymbol(backHalfCube.Top.Symbol, (backHalfCube.Top.Orientation + 1) % 4);
                 break;
         }
+        _faceGivenByHighlight = Rnd.Range(0, 6);
         var faceGivenFully = (new[] { 0, 1, 4 }.Contains(_faceGivenByHighlight) ? new[] { 2, 3, 5 } : new[] { 0, 1, 4 })[Rnd.Range(0, 3)];
         _facesRevealed.Add(faceGivenFully);
-        _solution = new[] { halfCube1.Top, halfCube1.Front, right, back, halfCube1.Left, bottom };
+        _solution = new[] { frontHalfCube.Top, frontHalfCube.Front, right, back, frontHalfCube.Left, bottom };
         _selectableSymbols = _solution.Except(new[] { _solution[faceGivenFully] }).ToArray().Shuffle();
         for (int i = 0; i < _selectableSymbols.Length; i++)
         {
