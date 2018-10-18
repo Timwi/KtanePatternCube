@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using PatternCube;
 using UnityEngine;
-
 using Rnd = UnityEngine.Random;
 
 /// <summary>
@@ -227,7 +228,7 @@ public class PatternCubeModule : MonoBehaviour
         }
     }
 
-    private readonly static Dictionary<char, SvgSymbol> _svgSymbols = new Dictionary<char, SvgSymbol> {
+    private static readonly Dictionary<char, SvgSymbol> _svgSymbols = new Dictionary<char, SvgSymbol> {
         { 'A', new SvgSymbol(0, 0, "M60 10a50 50 0 1 0 0 100 50 50 0 0 0 0-100zm0 10a40 40 0 0 1 40 40H20a40 40 0 0 1 40-40z") },
         { 'B', new SvgSymbol(120, 0, "M180 10l-50 100h100z") },
         { 'C', new SvgSymbol(240, 0, "M330 40a30 30 0 1 1-60 0 30 30 0 1 1 60 0zm-70 40h80v30h-80z") },

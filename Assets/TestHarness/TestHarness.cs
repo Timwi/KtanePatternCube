@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using EdgeworkConfigurator;
 using Newtonsoft.Json;
 using UnityEngine;
-using EdgeworkConfigurator;
 
 public class FakeBombInfo : MonoBehaviour
 {
@@ -78,7 +78,7 @@ public class FakeBombInfo : MonoBehaviour
         {
             if (key == KMBombInfo.QUERYKEY_GET_PORTS)
             {
-                return JsonConvert.SerializeObject((object) new Dictionary<string, List<string>>()
+                return JsonConvert.SerializeObject(new Dictionary<string, List<string>>()
                 {
                     {
                         "presentPorts", ports
@@ -138,7 +138,7 @@ public class FakeBombInfo : MonoBehaviour
         {
             if (key == KMBombInfo.QUERYKEY_GET_INDICATOR)
             {
-                return JsonConvert.SerializeObject((object) new Dictionary<string, string>()
+                return JsonConvert.SerializeObject(new Dictionary<string, string>()
                 {
                     {
                         "label", val
@@ -174,7 +174,7 @@ public class FakeBombInfo : MonoBehaviour
         {
             if (key == KMBombInfo.QUERYKEY_GET_BATTERIES)
             {
-                return JsonConvert.SerializeObject((object) new Dictionary<string, int>()
+                return JsonConvert.SerializeObject(new Dictionary<string, int>()
                 {
                     {
                         "numbatteries", batt
@@ -327,7 +327,7 @@ public class FakeBombInfo : MonoBehaviour
         List<string> responses = new List<string>();
         if (queryKey == KMBombInfo.QUERYKEY_GET_SERIAL_NUMBER)
         {
-            responses.Add(JsonConvert.SerializeObject((object) new Dictionary<string, string>()
+            responses.Add(JsonConvert.SerializeObject(new Dictionary<string, string>()
             {
                 {
                     "serial", serial
@@ -419,7 +419,7 @@ public class FakeBombInfo : MonoBehaviour
             }
             string str1 = string.Empty;
             for (int index = 0; index < 2; ++index) str1 = str1 + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length)];
-            string str2 = str1 + (object) Random.Range(0, 10);
+            string str2 = str1 + Random.Range(0, 10);
             for (int index = 3; index < 5; ++index) str2 = str2 + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length - 10)];
             serial = str2 + Random.Range(0, 10);
 
@@ -431,7 +431,7 @@ public class FakeBombInfo : MonoBehaviour
             {
                 string str1 = string.Empty;
                 for (int index = 0; index < 2; ++index) str1 = str1 + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length)];
-                string str2 = str1 + (object) Random.Range(0, 10);
+                string str2 = str1 + Random.Range(0, 10);
                 for (int index = 3; index < 5; ++index) str2 = str2 + SerialNumberPossibleCharArray[Random.Range(0, SerialNumberPossibleCharArray.Length - 10)];
                 serial = str2 + Random.Range(0, 10);
             }
