@@ -84,6 +84,8 @@ public class PatternCubeModule : MonoBehaviour
         // Generate the rules
         List<int> symbolIxs;
         var rnd = RuleSeedable.GetRNG();
+        Debug.LogFormat("[Pattern Cube #{0}] Using rule seed: {1}", _moduleId, rnd.Seed);
+
         string[] groupStrs = new string[2];
         if (rnd.Seed == 1)
         {
@@ -107,7 +109,6 @@ public class PatternCubeModule : MonoBehaviour
 
             symbolIxs = Enumerable.Range(0, 120).ToList();
             rnd.ShuffleFisherYates(symbolIxs);
-            var arrs = new List<string>();
             var groupsTemplates = new[] {
                 "ABX,AXY,BCD,AXZ,BCX,BCY,ABY,BXY,ACD,BXZ,BDX,BDY,ACX,ACY,CXY,ABD,CXZ,CDX,ADX,ADY,DXY,ABC,DXZ,CDY",
                 "EFX,EXY,FGH,EYZ,FGX,FGZ,EFZ,FXY,EGH,FYZ,FHX,FHZ,EGX,EGZ,GXY,EFH,GYZ,GHX,EHX,EHZ,HXY,EFG,HYZ,GHZ"
@@ -226,7 +227,7 @@ public class PatternCubeModule : MonoBehaviour
                 svg(x, y, highlighted: _puzzle.Faces[x, y].Face == _faceGivenByHighlight))).JoinString());
 
         Log(@"=svg[Symbols:]<svg xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 126'>{0}</svg>",
-            _selectableSymbols.Select((s, ix) => svgPath(ix, 0, s.Symbol, 0)).JoinString());
+            _selectableSymbols.Select((s, ix) => svgPath(ix, 0, symbolIxs["ABCDEFGHXYZ".IndexOf(s.Symbol)], 0)).JoinString());
         Log(@" The highlighted symbol is {0}.", "first,second,third,4th,5th".Split(',')[_highlightedPosition]);
 
         Log(@"=svg[Solution:]<svg xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 {0}'>{1}</svg>",
