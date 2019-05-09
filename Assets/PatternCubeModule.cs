@@ -313,18 +313,18 @@ public class PatternCubeModule : MonoBehaviour
                 var sym = _selectableSymbols[_selected];
                 if (sym.Symbol != _solution[fi.Face].Symbol)
                 {
-                    Log(" You tried to place symbol {0} where symbol {1} should have gone. Strike.", _solution.IndexOf(fs => fs.Symbol == sym.Symbol) + 1, fi.Face + 1);
+                    Log(" You tried to place symbol {0} where symbol {1} should have gone. Strike.", _selected + 1, _selectableSymbols.IndexOf(fs => fs != null && fs.Symbol == _solution[fi.Face].Symbol) + 1);
                     Module.HandleStrike();
                 }
                 else if (sym.Orientation != (_solution[fi.Face].Orientation + fi.Orientation) % 4)
                 {
-                    Log(" You tried to place symbol {0} in the correct place, but wrong orientation ({1} instead of {2}). Strike.", fi.Face + 1, "NESW"[sym.Orientation], "NESW"[(_solution[fi.Face].Orientation + fi.Orientation) % 4]);
+                    Log(" You tried to place symbol {0} in the correct place, but wrong orientation ({1} instead of {2}). Strike.", _selected + 1, "NESW"[sym.Orientation], "NESW"[(_solution[fi.Face].Orientation + fi.Orientation) % 4]);
                     Module.HandleStrike();
                 }
                 else
                 {
                     // Correct placement
-                    Log(" Symbol {0} placed correctly.", fi.Face + 1);
+                    Log(" Symbol {0} placed correctly.", _selected + 1);
                     _selectableSymbols[_selected] = null;
                     AssignSymbols();
                     StartCoroutine(animatePlacedSymbol(sym.Symbol));
