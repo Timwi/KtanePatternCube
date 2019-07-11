@@ -52,7 +52,7 @@ public class PatternCubeModule : MonoBehaviour
     void Start()
     {
         _moduleId = _moduleIdCounter++;
-        var numbers = Enumerable.Range(0, 26).ToList();
+        var numbers = Enumerable.Range(0, 26).Where(i => i != 20).ToList(); // exclude “U” because that’s a valid command (u-turn = 180)
         for (int i = 0; i < 6; i++)
         {
             var ix = Rnd.Range(0, numbers.Count);
@@ -236,15 +236,9 @@ public class PatternCubeModule : MonoBehaviour
                 _puzzle.Faces[x, y] == null ? null :
                 svg(x, y, symbolIxs["ABCDEFGHXYZ".IndexOf(_solution[_puzzle.Faces[x, y].Face].Symbol)], (_solution[_puzzle.Faces[x, y].Face].Orientation + _puzzle.Faces[x, y].Orientation) % 4))).JoinString());
 
-        // Because TP doesn’t set TwitchPlaysActive soon enough, we have to delay the TP letter initialization
-        StartCoroutine(initialize());
-    }
-
-    private IEnumerator initialize()
-    {
-        yield return new WaitForSeconds(.1f);
         AssignSymbols();
-        yield break;
+        // Because TP doesn’t set TwitchPlaysActive soon enough, we have to delay the TP letter initialization
+        Module.OnActivate += delegate { AssignSymbols(); };
     }
 
     private static string svg(int x, int y, int? symbol = null, int orientation = -1, bool highlighted = false)
@@ -426,56 +420,44 @@ public class PatternCubeModule : MonoBehaviour
 
 #pragma warning disable 414
 #pragma warning disable IDE0044 // Add readonly modifier
-    private readonly string TwitchHelpMessage = @"!{0} rotate 1 cw/ccw/180 [rotate the first symbol] | !{0} place 1 in C [place the first symbol in the box with letter C] | Chain with commas.";
+    private readonly string TwitchHelpMessage = @"!{0} rotate 1 cw/ccw/180 [rotate the first symbol] | !{0} place 1 in C [place the first symbol in the box with letter C] | Abbreviate: !{0} 1 cw 1 c";
     private bool TwitchPlaysActive;
 #pragma warning restore IDE0044 // Add readonly modifier
 #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand(string command)
     {
-        if (command == "activate")
-        {
-            if (!TwitchPlaysActive)
-            {
-                TwitchPlaysActive = true;
-                AssignSymbols();
-                yield return null;
-            }
-            yield break;
-        }
+        var pieces = Regex.Matches(command, @"(\brotate\b|\bturn\b|\bplace\b|\s|,|(?<rotate>\d +(?:cw|ccw|180|u))|(?<place>(?<num>\d) +(?:in +)?(?<loc>[a-z])))", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-        var pieces = command.Split(',');
         var commands = new List<object>();
-        foreach (var piece in pieces)
+        var strIx = 0;
+        foreach (Match piece in pieces)
         {
-            if (commands.Count > 0)
-                commands.Add(true);
-            var m = Regex.Match(piece, @"^\s*(?:place|put)\s+(\d+)\s+in\s+([A-Z])\s*$", RegexOptions.IgnoreCase);
-            if (m.Success)
+            if (piece.Index != strIx)
+                yield break;
+            strIx += piece.Length;
+            if (piece.Groups["place"].Success)
             {
-                var ix = int.Parse(m.Groups[1].Value) - 1;
-                var cell = Array.IndexOf(_tpLetters, m.Groups[2].Value.ToUpperInvariant()[0]);
+                var ix = int.Parse(piece.Groups["num"].Value) - 1;
+                var cell = Array.IndexOf(_tpLetters, piece.Groups["loc"].Value.ToUpperInvariant()[0]);
                 if (cell == -1 || ix < 0 || ix >= 5)
                     yield break;
                 commands.Add(new Action(() => { if (_selected != ix) SelectableBoxes[ix].OnInteract(); }));
                 commands.Add(new Action(() => { if (_selected == ix) PlaceableBoxes[cell].OnInteract(); }));
-                continue;
             }
-            m = Regex.Match(piece, @"^\s*(?:rotate|turn)\s+(\d+)\s+(cw|ccw|180|around)\s*$", RegexOptions.IgnoreCase);
-            if (m.Success)
+            else if (piece.Groups["rotate"].Success)
             {
-                var ix = int.Parse(m.Groups[1].Value) - 1;
+                var spl = piece.Groups["rotate"].Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                var ix = int.Parse(spl[0]) - 1;
                 if (ix < 0 || ix >= 5)
                     yield break;
                 var rotation =
-                    m.Groups[2].Value.Equals("cw", StringComparison.InvariantCultureIgnoreCase) ? 1 :
-                    m.Groups[2].Value.Equals("ccw", StringComparison.InvariantCultureIgnoreCase) ? 3 : 2;
+                    spl[1].Equals("cw", StringComparison.InvariantCultureIgnoreCase) ? 1 :
+                    spl[1].Equals("ccw", StringComparison.InvariantCultureIgnoreCase) ? 3 : 2;
                 commands.Add(new Action(() => { if (_selected != ix) SelectableBoxes[ix].OnInteract(); }));
                 for (int i = 0; i < rotation; i++)
                     commands.Add(new Action(() => { SelectableBoxes[ix].OnInteract(); }));
-                continue;
             }
-            yield break;
         }
 
         foreach (var action in commands)
