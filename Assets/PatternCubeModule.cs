@@ -267,7 +267,7 @@ public class PatternCubeModule : MonoBehaviour
             {
                 yield return null;
                 elapsed += Time.deltaTime;
-                var t = easeOutSine(Mathf.Min(elapsed, duration), duration, 0, 1);
+                var t = Easing.OutSine(Mathf.Min(elapsed, duration), 0, 1, duration);
                 _selectableSymbolObjs[ix].transform.localRotation = Quaternion.Slerp(Quaternion.Euler(90, elem.From * 90, 0), Quaternion.Euler(90, elem.To * 90, 0), t);
             }
         }
@@ -333,11 +333,6 @@ public class PatternCubeModule : MonoBehaviour
         };
     }
 
-    private static float easeOutSine(float time, float duration, float from, float to)
-    {
-        return (to - from) * Mathf.Sin(time / duration * (Mathf.PI / 2)) + from;
-    }
-
     private IEnumerator animatePlacedSymbol(char symbol)
     {
         var ix = -1;
@@ -355,7 +350,7 @@ public class PatternCubeModule : MonoBehaviour
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            var t = easeOutSine(Mathf.Min(elapsed, duration), duration, 0, 1);
+            var t = Easing.OutSine(Mathf.Min(elapsed, duration), 0, 1, duration);
             _placeableSymbolObjs[ix].transform.localScale = Vector3.Lerp(new Vector3(.04f, .04f, .04f), new Vector3(.025f, .025f, .025f), t);
             _placeableSymbolObjs[ix].transform.localPosition = Vector3.Lerp(new Vector3(0, .016f, 0), new Vector3(0, .01401f, 0), t);
             yield return null;
@@ -421,7 +416,7 @@ public class PatternCubeModule : MonoBehaviour
 #pragma warning disable 414
 #pragma warning disable IDE0044 // Add readonly modifier
     private readonly string TwitchHelpMessage = @"!{0} rotate 1 cw/ccw/180 [rotate the first symbol] | !{0} place 1 in C [place the first symbol in the box with letter C] | Abbreviate: !{0} 1 cw 1 c";
-    private bool TwitchPlaysActive;
+    private bool TwitchPlaysActive = false;
 #pragma warning restore IDE0044 // Add readonly modifier
 #pragma warning restore 414
 
