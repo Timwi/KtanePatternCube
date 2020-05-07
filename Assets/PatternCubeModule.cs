@@ -463,4 +463,28 @@ public class PatternCubeModule : MonoBehaviour
             yield return new WaitForSeconds(.1f);
         }
     }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        for (var x = 0; x < _puzzle.Faces.GetLength(0); x++)
+            for (var y = 0; y < _puzzle.Faces.GetLength(1); y++)
+            {
+                if (_puzzle.Faces[x, y] == null)
+                    continue;
+                var solution = _solution[_puzzle.Faces[x, y].Face];
+                var leftIx = _selectableSymbols.IndexOf(fs => fs != null && fs.Symbol == solution.Symbol);
+                if (leftIx == -1)
+                    continue;
+                do
+                {
+                    SelectableBoxes[leftIx].OnInteract();
+                    yield return new WaitForSeconds(.1f);
+                }
+                while (_selectableSymbols[leftIx].Orientation != (solution.Orientation + _puzzle.Faces[x, y].Orientation) % 4);
+
+                yield return new WaitForSeconds(.2f);
+                PlaceableBoxes[_puzzle.Faces[x, y].Face].OnInteract();
+                yield return new WaitForSeconds(.3f);
+            }
+    }
 }
