@@ -90,15 +90,15 @@ public class PatternCubeModule : MonoBehaviour
         if (rnd.Seed == 1)
         {
             groupStrs[0] =
-                "X1,A3,B1;Y0,X1,A1;B0,D1,C2;Z1,A2,X0;X2,C2,B1;Y3,C1,B0;" +
-                "Y2,B0,A2;X1,Y2,B0;C2,A3,D1;Z1,X3,B1;D0,B0,X0;D1,B2,Y0;" +
-                "X2,C0,A1;A2,C3,Y2;X2,C3,Y0;D3,A0,B3;X0,Z2,C1;X1,C1,D0;" +
-                "X1,A2,D2;A0,Y3,D0;Y0,D0,X3;C3,B3,A1;Z1,D0,X0;C1,D0,Y2";
+                "X1,A3,B1;Y0,X1,A1;B0,D1,C2;Z1,A2,X0;Y2,B0,A2;Y3,C1,B0;" +
+                "X2,C0,A1;X1,Y2,B0;C2,A3,D1;Z1,X3,B1;A2,C3,Y2;D1,B2,Y0;" +
+                "X2,C2,B1;X1,A2,D2;X2,C3,Y0;D3,A0,B3;X0,Z2,C1;A0,Y3,D0;" +
+                "D0,B0,X0;X1,C1,D0;Y0,D0,X3;C3,B3,A1;Z1,D0,X0;C1,D0,Y2";
             groupStrs[1] =
-                "X1,E0,F0;X0,E3,Y1;H1,G1,F1;Y3,Z3,E1;G1,X1,F0;G1,Z1,F1;" +
-                "Z3,F1,E2;X0,F0,Y2;G1,E2,H3;F1,Y2,Z0;X3,H1,F0;F1,Z1,H2;" +
-                "E0,X2,G1;G2,E2,Z1;Y1,X3,G3;H1,E3,F0;G0,Z2,Y0;G1,H3,X0;" +
-                "H3,X2,E2;Z0,H2,E3;X3,H3,Y0;E0,F0,G1;Z3,Y3,H1;Z2,H3,G2";
+                "X1,E0,F0;X0,E3,Y1;H1,G1,F1;Y3,Z3,E1;Z3,F1,E2;G1,Z1,F1;" +
+                "E0,X2,G1;X0,F0,Y2;G1,E2,H3;F1,Y2,Z0;G2,E2,Z1;F1,Z1,H2;" +
+                "G1,X1,F0;H3,X2,E2;Y1,X3,G3;H1,E3,F0;G0,Z2,Y0;Z0,H2,E3;" +
+                "X3,H1,F0;G1,H3,X0;X3,H3,Y0;E0,F0,G1;Z3,Y3,H1;Z2,H3,G2";
             symbolIxs = new List<int> { 90, 91, 92, 93, 100, 101, 102, 103, 110, 111, 112 };
         }
         else
@@ -110,8 +110,8 @@ public class PatternCubeModule : MonoBehaviour
             symbolIxs = Enumerable.Range(0, 120).ToList();
             rnd.ShuffleFisherYates(symbolIxs);
             var groupsTemplates = new[] {
-                "ABX,AXY,BCD,AXZ,BCX,BCY,ABY,BXY,ACD,BXZ,BDX,BDY,ACX,ACY,CXY,ABD,CXZ,CDX,ADX,ADY,DXY,ABC,DXZ,CDY",
-                "EFX,EXY,FGH,EYZ,FGX,FGZ,EFZ,FXY,EGH,FYZ,FHX,FHZ,EGX,EGZ,GXY,EFH,GYZ,GHX,EHX,EHZ,HXY,EFG,HYZ,GHZ"
+                "ABX,AXY,BCD,AXZ,ABY,BCY,ACX,BXY,ACD,BXZ,ACY,BDY,BCX,ADX,CXY,ABD,CXZ,ADY,BDX,CDX,DXY,ABC,DXZ,CDY",
+                "EFX,EXY,FGH,EYZ,EFZ,FGZ,EGX,FXY,EGH,FYZ,EGZ,FHZ,FGX,EHX,GXY,EFH,GYZ,EHZ,FHX,GHX,HXY,EFG,HYZ,GHZ"
             };
             for (var i = 0; i < 2; i++)
             {
