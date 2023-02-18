@@ -422,7 +422,9 @@ public class PatternCubeModule : MonoBehaviour
 
     IEnumerator ProcessTwitchCommand(string command)
     {
-        var pieces = Regex.Matches(command, @"(\brotate\b|\bturn\b|\bplace\b|\s|,|(?<rotate>\d +(?:cw|ccw|180|u))|(?<place>(?<num>\d) +(?:in +)?(?<loc>[a-z])))", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        var pieces = Regex.Matches(command, @"(\brotate\b|\bturn\b|\bplace\b|\s+|,|(?<rotate>\d\s+(?:cw|ccw|180|u))|(?<place>(?<num>\d)\s+(?:in\s+)?(?<loc>[a-tv-z])))", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (pieces[0].Index != 0 || pieces[pieces.Count - 1].Index + pieces[pieces.Count - 1].Length != command.Length)
+            yield break;
 
         var commands = new List<object>();
         var strIx = 0;
