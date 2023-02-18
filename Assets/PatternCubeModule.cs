@@ -422,11 +422,9 @@ public class PatternCubeModule : MonoBehaviour
 
     IEnumerator ProcessTwitchCommand(string command)
     {
-        var pieces = Regex.Matches(command, @"(\brotate\b|\bturn\b|\bplace\b|\s+|,|(?<rotate>\d\s+(?:cw|ccw|180|u))|(?<place>(?<num>\d)\s+(?:in\s+)?(?<loc>[a-tv-z])))", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-        if (pieces[0].Index != 0 || pieces[pieces.Count - 1].Index + pieces[pieces.Count - 1].Length != command.Length)
-            yield break;
+        var pieces = Regex.Matches(command, @"\s+|,|(?<rotate>(?:\b(?:rotate|turn)\s+)?(?<rn>\d)\s+(?:(?<cw>cw)|(?<ccw>ccw)|180|u))|(?<place>(?:\bplace\s+)?(?<pn>\d)\s+(?:in\s+)?(?<loc>[a-tv-z]))", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-        var commands = new List<object>();
+        var commands = new List<Action>();
         var strIx = 0;
         foreach (Match piece in pieces)
         {
@@ -435,7 +433,7 @@ public class PatternCubeModule : MonoBehaviour
             strIx += piece.Length;
             if (piece.Groups["place"].Success)
             {
-                var ix = int.Parse(piece.Groups["num"].Value) - 1;
+                var ix = int.Parse(piece.Groups["pn"].Value) - 1;
                 var cell = Array.IndexOf(_tpLetters, piece.Groups["loc"].Value.ToUpperInvariant()[0]);
                 if (cell == -1 || ix < 0 || ix >= 5)
                     yield break;
@@ -444,24 +442,24 @@ public class PatternCubeModule : MonoBehaviour
             }
             else if (piece.Groups["rotate"].Success)
             {
-                var spl = piece.Groups["rotate"].Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                var ix = int.Parse(spl[0]) - 1;
+                var ix = int.Parse(piece.Groups["rn"].Value) - 1;
                 if (ix < 0 || ix >= 5)
                     yield break;
                 var rotation =
-                    spl[1].Equals("cw", StringComparison.InvariantCultureIgnoreCase) ? 1 :
-                    spl[1].Equals("ccw", StringComparison.InvariantCultureIgnoreCase) ? 3 : 2;
+                    piece.Groups["cw"].Success ? 1 :
+                    piece.Groups["ccw"].Success ? 3 : 2;
                 commands.Add(new Action(() => { if (_selected != ix) SelectableBoxes[ix].OnInteract(); }));
                 for (int i = 0; i < rotation; i++)
                     commands.Add(new Action(() => { SelectableBoxes[ix].OnInteract(); }));
             }
         }
+        if (strIx != command.Length)
+            yield break;
 
         foreach (var action in commands)
         {
             yield return null;
-            if (action is Action)
-                ((Action) action)();
+            action();
             yield return new WaitForSeconds(.1f);
         }
     }
