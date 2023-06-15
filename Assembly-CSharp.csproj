@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Data.cs" />
+     <Compile Include="Assets\KMScripts\AssemblyShare.cs" />
      <Compile Include="Assets\KMScripts\Easing.cs" />
      <Compile Include="Assets\KMScripts\GameFixes.cs" />
      <Compile Include="Assets\KMScripts\GeneralExtensions.cs" />
