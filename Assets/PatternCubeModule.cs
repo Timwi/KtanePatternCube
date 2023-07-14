@@ -243,12 +243,12 @@ public class PatternCubeModule : MonoBehaviour
 
     private static string svg(int x, int y, int? symbol = null, int orientation = -1, bool highlighted = false)
     {
-        var rect = string.Format("<rect x='{0}' y='{1}' width='120' height='120' fill='{2}' stroke='black' stroke-width='2'/>", x * 120, y * 120, highlighted ? "#f88" : "none");
+        var rect = string.Format("<rect class='{2}' x='{0}' y='{1}' width='120' height='120'/>", x * 120, y * 120, highlighted ? "highlighted cell" : "cell");
         return symbol == null ? rect : rect + svgPath(x, y, symbol.Value, orientation);
     }
     private static string svgPath(int x, int y, int symbol, int orientation)
     {
-        return string.Format("<path d='{5}' transform='translate({3}, {4}) rotate({2}) translate({0}, {1})'/>", -120 * (symbol % 10) - 60, -120 * (symbol / 10) - 60, 90 * orientation, 120 * x + 60, 120 * y + 60, Data.Svgs[symbol]);
+        return string.Format("<path class='symbol' d='{5}' transform='translate({3}, {4}) rotate({2}) translate({0}, {1})'/>", -120 * (symbol % 10) - 60, -120 * (symbol / 10) - 60, 90 * orientation, 120 * x + 60, 120 * y + 60, Data.Svgs[symbol]);
     }
 
     private IEnumerator rotator(int ix)
