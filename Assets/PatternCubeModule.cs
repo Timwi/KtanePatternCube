@@ -219,18 +219,18 @@ public class PatternCubeModule : MonoBehaviour
         var id = "ModuleFront_" + _puzzle.ID;
         ModuleFront.mesh = NetMeshes.First(m => m.name == id);
 
-        Log(@"=svg[Puzzle:]<svg xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 {0}'>{1}</svg>",
+        Log(@"=svg[Puzzle:]<svg class='pattern-cube puzzle' xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 {0}'>{1}</svg>",
             /* {0} */ 120 * _puzzle.Faces.GetLength(1) + 6,
             /* {1} */ Enumerable.Range(0, _puzzle.Faces.GetLength(1)).SelectMany(y => Enumerable.Range(0, _puzzle.Faces.GetLength(0)).Select(x =>
                 _puzzle.Faces[x, y] == null ? null :
                 _puzzle.Faces[x, y].Face == faceGivenFully ? svg(x, y, symbolIxs["ABCDEFGHXYZ".IndexOf(_solution[_puzzle.Faces[x, y].Face].Symbol)], (_solution[_puzzle.Faces[x, y].Face].Orientation + _puzzle.Faces[x, y].Orientation) % 4) :
                 svg(x, y, highlighted: _puzzle.Faces[x, y].Face == _faceGivenByHighlight))).JoinString());
 
-        Log(@"=svg[Symbols:]<svg xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 126'>{0}</svg>",
+        Log(@"=svg[Symbols:]<svg class='pattern-cube symbols' xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 126'>{0}</svg>",
             _selectableSymbols.Select((s, ix) => svgPath(ix, 0, symbolIxs["ABCDEFGHXYZ".IndexOf(s.Symbol)], 0)).JoinString());
         Log(@" The highlighted symbol is {0}.", "first,second,third,4th,5th".Split(',')[_highlightedPosition]);
 
-        Log(@"=svg[Solution:]<svg xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 {0}'>{1}</svg>",
+        Log(@"=svg[Solution:]<svg class='pattern-cube solution' xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 {0}'>{1}</svg>",
             /* {0} */ 120 * _puzzle.Faces.GetLength(1) + 6,
             /* {1} */ Enumerable.Range(0, _puzzle.Faces.GetLength(1)).SelectMany(y => Enumerable.Range(0, _puzzle.Faces.GetLength(0)).Select(x =>
                 _puzzle.Faces[x, y] == null ? null :
