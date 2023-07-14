@@ -13,6 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: PatternCube
   title: Pattern Cube
+  author: Timwi
   description: 'Professor Layton would be proud.
 
 
