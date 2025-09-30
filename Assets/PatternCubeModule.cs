@@ -41,7 +41,11 @@ public class PatternCubeModule : MonoBehaviour
     private FaceSymbol[] _selectableSymbols;
     private int _faceGivenByHighlight;
     private int _selected = 2;
-    private int _highlightedPosition;   // for Souvenir
+    private int _highlightedPosition;
+
+    // for Souvenir
+    private int _highlightedSymbol;
+    private List<int> _symbolIxs;
 
     private readonly List<int> _facesRevealed = new List<int>();
     private readonly char[] _tpLetters = new char[6];
@@ -49,11 +53,11 @@ public class PatternCubeModule : MonoBehaviour
     private sealed class RotateTask { public int From; public int To; }
     private readonly Queue<RotateTask>[] _queues = new Queue<RotateTask>[5];
 
-    void Start()
+    private void Start()
     {
         _moduleId = _moduleIdCounter++;
         var numbers = Enumerable.Range(0, 26).Where(i => i != 20).ToList(); // exclude “U” because that’s a valid command (u-turn = 180)
-        for (int i = 0; i < 6; i++)
+        for (var i = 0; i < 6; i++)
         {
             var ix = Rnd.Range(0, numbers.Count);
             _tpLetters[i] = (char) ('A' + numbers[ix]);
@@ -62,7 +66,7 @@ public class PatternCubeModule : MonoBehaviour
             numbers.RemoveAt(ix);
         }
 
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
         {
             _selectableSymbolObjs[i] = SelectableBoxes[i].transform.Find("Symbol").GetComponent<MeshRenderer>();
             _selectableFrameObjs[i] = SelectableBoxes[i].transform.Find("Frame").GetComponent<MeshRenderer>();
@@ -70,23 +74,22 @@ public class PatternCubeModule : MonoBehaviour
             _queues[i] = new Queue<RotateTask>();
             StartCoroutine(rotator(i));
         }
-        for (int i = 0; i < 6; i++)
+        for (var i = 0; i < 6; i++)
         {
             _placeableSymbolObjs[i] = PlaceableBoxes[i].transform.Find("Symbol").GetComponent<MeshRenderer>();
             _placeableFrameObjs[i] = PlaceableBoxes[i].transform.Find("Frame").GetComponent<MeshRenderer>();
             _placeableScreenObjs[i] = PlaceableBoxes[i].transform.Find("Screen").GetComponent<MeshRenderer>();
         }
 
-        for (int i = 0; i < 25; i++)
+        for (var i = 0; i < 25; i++)
             if (i % 5 != 0)
                 MainSelectable.Children[i] = null;
 
         // Generate the rules
-        List<int> symbolIxs;
         var rnd = RuleSeedable.GetRNG();
         Debug.LogFormat("[Pattern Cube #{0}] Using rule seed: {1}", _moduleId, rnd.Seed);
 
-        string[] groupStrs = new string[2];
+        var groupStrs = new string[2];
         if (rnd.Seed == 1)
         {
             groupStrs[0] =
@@ -99,7 +102,7 @@ public class PatternCubeModule : MonoBehaviour
                 "E0,X2,G1;X0,F0,Y2;G1,E2,H3;F1,Y2,Z0;G2,E2,Z1;F1,Z1,H2;" +
                 "G1,X1,F0;H3,X2,E2;Y1,X3,G3;H1,E3,F0;G0,Z2,Y0;Z0,H2,E3;" +
                 "X3,H1,F0;G1,H3,X0;X3,H3,Y0;E0,F0,G1;Z3,Y3,H1;Z2,H3,G2";
-            symbolIxs = new List<int> { 90, 91, 92, 93, 100, 101, 102, 103, 110, 111, 112 };
+            _symbolIxs = new List<int> { 90, 91, 92, 93, 100, 101, 102, 103, 110, 111, 112 };
         }
         else
         {
@@ -107,8 +110,9 @@ public class PatternCubeModule : MonoBehaviour
             for (var i = 0; i < skip; i++)
                 rnd.NextDouble();
 
-            symbolIxs = Enumerable.Range(0, 120).ToList();
-            rnd.ShuffleFisherYates(symbolIxs);
+            _symbolIxs = Enumerable.Range(0, 120).ToList();
+            rnd.ShuffleFisherYates(_symbolIxs);
+            _symbolIxs.RemoveRange(11, 120 - 11);
             var groupsTemplates = new[] {
                 "ABX,AXY,BCD,AXZ,ABY,BCY,ACX,BXY,ACD,BXZ,ACY,BDY,BCX,ADX,CXY,ABD,CXZ,ADY,BDX,CDX,DXY,ABC,DXZ,CDY",
                 "EFX,EXY,FGH,EYZ,EFZ,FGZ,EGX,FXY,EGH,FYZ,EGZ,FHZ,FGX,EHX,GXY,EFH,GYZ,EHZ,FHX,GHX,HXY,EFG,HYZ,GHZ"
@@ -129,7 +133,7 @@ public class PatternCubeModule : MonoBehaviour
             }
         }
 
-        HalfCube[][] groups = groupStrs.Select(str => str.Split(';').Select(hci => hci.Split(',').Select(fc => new FaceSymbol(fc[0], fc[1] - '0')).ToArray()).Select(arr => new HalfCube(arr[0], arr[1], arr[2])).ToArray()).ToArray();
+        var groups = groupStrs.Select(str => str.Split(';').Select(hci => hci.Split(',').Select(fc => new FaceSymbol(fc[0], fc[1] - '0')).ToArray()).Select(arr => new HalfCube(arr[0], arr[1], arr[2])).ToArray()).ToArray();
 
         // Generate a puzzle
         _puzzle = Data.Nets[Rnd.Range(0, Data.Nets.Length)];
@@ -172,17 +176,20 @@ public class PatternCubeModule : MonoBehaviour
         _facesRevealed.Add(faceGivenFully);
         _solution = new[] { frontHalfCube.Top, frontHalfCube.Front, right, back, frontHalfCube.Left, bottom };
         _selectableSymbols = _solution.Except(new[] { _solution[faceGivenFully] }).ToArray().Shuffle();
-        for (int i = 0; i < _selectableSymbols.Length; i++)
+        for (var i = 0; i < _selectableSymbols.Length; i++)
         {
             _selectableSymbols[i] = new FaceSymbol(_selectableSymbols[i].Symbol, Rnd.Range(0, 4));
             if (_selectableSymbols[i].Symbol == _solution[_faceGivenByHighlight].Symbol)
+            {
                 _highlightedPosition = i;
+                _highlightedSymbol = _symbolIxs["ABCDEFGHXYZ".IndexOf(_selectableSymbols[i].Symbol)];
+            }
         }
 
         // Populate the selectable boxes
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
         {
-            _selectableSymbolObjs[i].material.mainTexture = SymbolTextures[symbolIxs["ABCDEFGHXYZ".IndexOf(_selectableSymbols[i].Symbol)]];
+            _selectableSymbolObjs[i].material.mainTexture = SymbolTextures[_symbolIxs["ABCDEFGHXYZ".IndexOf(_selectableSymbols[i].Symbol)]];
             _selectableSymbolObjs[i].transform.localEulerAngles = new Vector3(90, _selectableSymbols[i].Orientation * 90, 0);
             _selectableFrameObjs[i].material = FrameRed;
             _selectableScreenObjs[i].material = _selectableSymbols[i].Symbol == _solution[_faceGivenByHighlight].Symbol ? ScreenLight : ScreenDark;
@@ -197,14 +204,14 @@ public class PatternCubeModule : MonoBehaviour
         const float w = (x2 - x1) / 5.5f;
         const float h = (y2 - y1) / 5.5f;
 
-        for (int y = 0; y < _puzzle.Faces.GetLength(1); y++)
-            for (int x = 0; x < _puzzle.Faces.GetLength(0); x++)
+        for (var y = 0; y < _puzzle.Faces.GetLength(1); y++)
+            for (var x = 0; x < _puzzle.Faces.GetLength(0); x++)
             {
                 if (_puzzle.Faces[x, y] == null)
                     continue;
                 var fi = _puzzle.Faces[x, y];
                 _placeableSymbolObjs[fi.Face].transform.localEulerAngles = new Vector3(90, (fi.Orientation + _solution[fi.Face].Orientation) * 90, 0);
-                _placeableSymbolObjs[fi.Face].material.mainTexture = SymbolTextures[symbolIxs["ABCDEFGHXYZ".IndexOf(_solution[fi.Face].Symbol)]];
+                _placeableSymbolObjs[fi.Face].material.mainTexture = SymbolTextures[_symbolIxs["ABCDEFGHXYZ".IndexOf(_solution[fi.Face].Symbol)]];
                 _placeableSymbolObjs[fi.Face].gameObject.SetActive(fi.Face == faceGivenFully);
                 _placeableFrameObjs[fi.Face].material = fi.Face == faceGivenFully ? FrameGreen : FrameYellow;
                 _placeableScreenObjs[fi.Face].material = fi.Face == _faceGivenByHighlight ? ScreenLight : ScreenDark;
@@ -223,18 +230,18 @@ public class PatternCubeModule : MonoBehaviour
             /* {0} */ 120 * _puzzle.Faces.GetLength(1) + 6,
             /* {1} */ Enumerable.Range(0, _puzzle.Faces.GetLength(1)).SelectMany(y => Enumerable.Range(0, _puzzle.Faces.GetLength(0)).Select(x =>
                 _puzzle.Faces[x, y] == null ? null :
-                _puzzle.Faces[x, y].Face == faceGivenFully ? svg(x, y, symbolIxs["ABCDEFGHXYZ".IndexOf(_solution[_puzzle.Faces[x, y].Face].Symbol)], (_solution[_puzzle.Faces[x, y].Face].Orientation + _puzzle.Faces[x, y].Orientation) % 4) :
+                _puzzle.Faces[x, y].Face == faceGivenFully ? svg(x, y, _symbolIxs["ABCDEFGHXYZ".IndexOf(_solution[_puzzle.Faces[x, y].Face].Symbol)], (_solution[_puzzle.Faces[x, y].Face].Orientation + _puzzle.Faces[x, y].Orientation) % 4) :
                 svg(x, y, highlighted: _puzzle.Faces[x, y].Face == _faceGivenByHighlight))).JoinString());
 
         Log(@"=svg[Symbols:]<svg class='pattern-cube symbols' xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 126'><rect class='highlighted' x='{0}' y='0' width='120' height='120' />{1}</svg>",
             120 * _highlightedPosition,
-            _selectableSymbols.Select((s, ix) => svgPath(ix, 0, symbolIxs["ABCDEFGHXYZ".IndexOf(s.Symbol)], 0)).JoinString());
+            _selectableSymbols.Select((s, ix) => svgPath(ix, 0, _symbolIxs["ABCDEFGHXYZ".IndexOf(s.Symbol)], 0)).JoinString());
 
         Log(@"=svg[Solution:]<svg class='pattern-cube solution' xmlns='http://www.w3.org/2000/svg' viewBox='-3 -3 1206 {0}'>{1}</svg>",
             /* {0} */ 120 * _puzzle.Faces.GetLength(1) + 6,
             /* {1} */ Enumerable.Range(0, _puzzle.Faces.GetLength(1)).SelectMany(y => Enumerable.Range(0, _puzzle.Faces.GetLength(0)).Select(x =>
                 _puzzle.Faces[x, y] == null ? null :
-                svg(x, y, symbolIxs["ABCDEFGHXYZ".IndexOf(_solution[_puzzle.Faces[x, y].Face].Symbol)], (_solution[_puzzle.Faces[x, y].Face].Orientation + _puzzle.Faces[x, y].Orientation) % 4))).JoinString());
+                svg(x, y, _symbolIxs["ABCDEFGHXYZ".IndexOf(_solution[_puzzle.Faces[x, y].Face].Symbol)], (_solution[_puzzle.Faces[x, y].Face].Orientation + _puzzle.Faces[x, y].Orientation) % 4))).JoinString());
 
         AssignSymbols();
         // Because TP doesn’t set TwitchPlaysActive soon enough, we have to delay the TP letter initialization
@@ -246,10 +253,9 @@ public class PatternCubeModule : MonoBehaviour
         var rect = string.Format("<rect class='{2}' x='{0}' y='{1}' width='120' height='120'/>", x * 120, y * 120, highlighted ? "highlighted cell" : "cell");
         return symbol == null ? rect : rect + svgPath(x, y, symbol.Value, orientation);
     }
-    private static string svgPath(int x, int y, int symbol, int orientation)
-    {
-        return string.Format("<path class='symbol' d='{5}' transform='translate({3}, {4}) rotate({2}) translate({0}, {1})'/>", -120 * (symbol % 10) - 60, -120 * (symbol / 10) - 60, 90 * orientation, 120 * x + 60, 120 * y + 60, Data.Svgs[symbol]);
-    }
+    private static string svgPath(int x, int y, int symbol, int orientation) =>
+        string.Format("<path class='symbol' d='{5}' transform='translate({3}, {4}) rotate({2}) translate({0}, {1})'/>",
+            -120 * (symbol % 10) - 60, -120 * (symbol / 10) - 60, 90 * orientation, 120 * x + 60, 120 * y + 60, Data.Svgs[symbol]);
 
     private IEnumerator rotator(int ix)
     {
@@ -281,62 +287,59 @@ public class PatternCubeModule : MonoBehaviour
         return fs.Symbol + "NESW".Substring((fs.Orientation + fi.Orientation) % 4, 1);
     }
 
-    private KMSelectable.OnInteractHandler GetPlaceableHandler(FaceInfo fi)
+    private KMSelectable.OnInteractHandler GetPlaceableHandler(FaceInfo fi) => delegate
     {
-        return delegate
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, PlaceableBoxes[fi.Face].transform);
+        PlaceableBoxes[fi.Face].AddInteractionPunch();
+
+        if (!_selectableSymbols.Any(sel => sel != null && sel.Symbol == _solution[fi.Face].Symbol))
+            // The user clicked on a square that is already filled; allow that and do nothing.
+            return false;
+
+        if (_selected == -1)
         {
-            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, PlaceableBoxes[fi.Face].transform);
-            PlaceableBoxes[fi.Face].AddInteractionPunch();
-
-            if (!_selectableSymbols.Any(sel => sel != null && sel.Symbol == _solution[fi.Face].Symbol))
-                // The user clicked on a square that is already filled; allow that and do nothing.
-                return false;
-
-            if (_selected == -1)
+            Log(" You tried to place a symbol without selecting a symbol first. Strike.");
+            Module.HandleStrike();
+        }
+        else if (_selectableSymbols[_selected] == null)
+        {
+            Log(" You tried to place a symbol that you already placed. Strike.");
+            Module.HandleStrike();
+        }
+        else
+        {
+            var sym = _selectableSymbols[_selected];
+            if (sym.Symbol != _solution[fi.Face].Symbol)
             {
-                Log(" You tried to place a symbol without selecting a symbol first. Strike.");
+                Log(" You tried to place symbol {0} where symbol {1} should have gone. Strike.", _selected + 1, _selectableSymbols.IndexOf(fs => fs != null && fs.Symbol == _solution[fi.Face].Symbol) + 1);
                 Module.HandleStrike();
             }
-            else if (_selectableSymbols[_selected] == null)
+            else if (sym.Orientation != (_solution[fi.Face].Orientation + fi.Orientation) % 4)
             {
-                Log(" You tried to place a symbol that you already placed. Strike.");
+                Log(" You tried to place symbol {0} in the correct place, but wrong orientation ({1} instead of {2}). Strike.", _selected + 1, "NESW"[sym.Orientation], "NESW"[(_solution[fi.Face].Orientation + fi.Orientation) % 4]);
                 Module.HandleStrike();
             }
             else
             {
-                var sym = _selectableSymbols[_selected];
-                if (sym.Symbol != _solution[fi.Face].Symbol)
+                // Correct placement
+                Log(" Symbol {0} placed correctly.", _selected + 1);
+                _selectableSymbols[_selected] = null;
+                AssignSymbols();
+                StartCoroutine(animatePlacedSymbol(sym.Symbol));
+                if (_selectableSymbols.All(s => s == null))
                 {
-                    Log(" You tried to place symbol {0} where symbol {1} should have gone. Strike.", _selected + 1, _selectableSymbols.IndexOf(fs => fs != null && fs.Symbol == _solution[fi.Face].Symbol) + 1);
-                    Module.HandleStrike();
-                }
-                else if (sym.Orientation != (_solution[fi.Face].Orientation + fi.Orientation) % 4)
-                {
-                    Log(" You tried to place symbol {0} in the correct place, but wrong orientation ({1} instead of {2}). Strike.", _selected + 1, "NESW"[sym.Orientation], "NESW"[(_solution[fi.Face].Orientation + fi.Orientation) % 4]);
-                    Module.HandleStrike();
-                }
-                else
-                {
-                    // Correct placement
-                    Log(" Symbol {0} placed correctly.", _selected + 1);
-                    _selectableSymbols[_selected] = null;
-                    AssignSymbols();
-                    StartCoroutine(animatePlacedSymbol(sym.Symbol));
-                    if (_selectableSymbols.All(s => s == null))
-                    {
-                        Log(" Module solved.");
-                        Module.HandlePass();
-                    }
+                    Log(" Module solved.");
+                    Module.HandlePass();
                 }
             }
-            return false;
-        };
-    }
+        }
+        return false;
+    };
 
     private IEnumerator animatePlacedSymbol(char symbol)
     {
         var ix = -1;
-        for (int i = 0; i < 6; i++)
+        for (var i = 0; i < 6; i++)
             if (_solution[i].Symbol == symbol)
             {
                 ix = i;
@@ -357,35 +360,32 @@ public class PatternCubeModule : MonoBehaviour
         }
     }
 
-    private KMSelectable.OnInteractHandler GetSelectableHandler(int ix)
+    private KMSelectable.OnInteractHandler GetSelectableHandler(int ix) => delegate
     {
-        return delegate
-        {
-            Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, SelectableBoxes[ix].transform);
-            SelectableBoxes[ix].AddInteractionPunch();
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, SelectableBoxes[ix].transform);
+        SelectableBoxes[ix].AddInteractionPunch();
 
-            if (_selectableSymbols[ix] == null)
-                // The user clicked on a symbol that is already on the net; allow that and do nothing.
-                return false;
-
-            if (ix != _selected)
-                // Just update the selection
-                _selected = ix;
-            else
-            {
-                var tsk = new RotateTask { From = _selectableSymbols[ix].Orientation, To = (_selectableSymbols[ix].Orientation + 1) % 4 };
-                _selectableSymbols[ix] = new FaceSymbol(_selectableSymbols[ix].Symbol, tsk.To);
-                _queues[ix].Enqueue(tsk);
-            }
-            AssignSymbols();
+        if (_selectableSymbols[ix] == null)
+            // The user clicked on a symbol that is already on the net; allow that and do nothing.
             return false;
-        };
-    }
+
+        if (ix != _selected)
+            // Just update the selection
+            _selected = ix;
+        else
+        {
+            var tsk = new RotateTask { From = _selectableSymbols[ix].Orientation, To = (_selectableSymbols[ix].Orientation + 1) % 4 };
+            _selectableSymbols[ix] = new FaceSymbol(_selectableSymbols[ix].Symbol, tsk.To);
+            _queues[ix].Enqueue(tsk);
+        }
+        AssignSymbols();
+        return false;
+    };
 
     private void AssignSymbols()
     {
         // Selectable boxes
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
         {
             if (_selectableSymbols[i] == null)
                 _selectableSymbolObjs[i].gameObject.SetActive(false);
@@ -394,8 +394,8 @@ public class PatternCubeModule : MonoBehaviour
         }
 
         // Placeable boxes
-        for (int y = 0; y < _puzzle.Faces.GetLength(1); y++)
-            for (int x = 0; x < _puzzle.Faces.GetLength(0); x++)
+        for (var y = 0; y < _puzzle.Faces.GetLength(1); y++)
+            for (var x = 0; x < _puzzle.Faces.GetLength(0); x++)
             {
                 if (_puzzle.Faces[x, y] == null)
                     continue;
@@ -408,10 +408,7 @@ public class PatternCubeModule : MonoBehaviour
             }
     }
 
-    void Log(string msg, params object[] fmtArgs)
-    {
-        Debug.LogFormat(@"[Pattern Cube #{0}]{1}", _moduleId, string.Format(msg, fmtArgs));
-    }
+    private void Log(string msg, params object[] fmtArgs) => Debug.LogFormat(@"[Pattern Cube #{0}]{1}", _moduleId, string.Format(msg, fmtArgs));
 
 #pragma warning disable 414
 #pragma warning disable IDE0044 // Add readonly modifier
@@ -420,7 +417,7 @@ public class PatternCubeModule : MonoBehaviour
 #pragma warning restore IDE0044 // Add readonly modifier
 #pragma warning restore 414
 
-    IEnumerator ProcessTwitchCommand(string command)
+    private IEnumerator ProcessTwitchCommand(string command)
     {
         var pieces = Regex.Matches(command, @"\s+|,|(?<rotate>(?:\b(?:rotate|turn)\s+)?(?<rn>\d)\s+(?:(?<cw>cw)|(?<ccw>ccw)|180|u))|(?<place>(?:\bplace\s+)?(?<pn>\d)\s+(?:in\s+)?(?<loc>[a-tv-z]))", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
@@ -449,8 +446,8 @@ public class PatternCubeModule : MonoBehaviour
                     piece.Groups["cw"].Success ? 1 :
                     piece.Groups["ccw"].Success ? 3 : 2;
                 commands.Add(new Action(() => { if (_selected != ix) SelectableBoxes[ix].OnInteract(); }));
-                for (int i = 0; i < rotation; i++)
-                    commands.Add(new Action(() => { SelectableBoxes[ix].OnInteract(); }));
+                for (var i = 0; i < rotation; i++)
+                    commands.Add(new Action(() => SelectableBoxes[ix].OnInteract()));
             }
         }
         if (strIx != command.Length)
@@ -464,7 +461,7 @@ public class PatternCubeModule : MonoBehaviour
         }
     }
 
-    IEnumerator TwitchHandleForcedSolve()
+    private IEnumerator TwitchHandleForcedSolve()
     {
         for (var x = 0; x < _puzzle.Faces.GetLength(0); x++)
             for (var y = 0; y < _puzzle.Faces.GetLength(1); y++)
