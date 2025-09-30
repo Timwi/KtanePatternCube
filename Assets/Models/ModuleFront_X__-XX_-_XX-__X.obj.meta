@@ -1,9 +1,7 @@
 fileFormatVersion: 2
 guid: fa006bbfd73e87947a283464714a4bfe
-timeCreated: 1532363068
-licenseType: Free
 ModelImporter:
-  serializedVersion: 21
+  serializedVersion: 22
   fileIDToRecycleName:
     100000: ModuleFront_X__-XX_-_XX-__X
     100002: //RootNode
@@ -12,10 +10,17 @@ ModelImporter:
     2300000: ModuleFront_X__-XX_-_XX-__X
     3300000: ModuleFront_X__-XX_-_XX-__X
     4300000: ModuleFront_X__-XX_-_XX-__X
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ModuleFront_X__-XX_-_XX-__XMat
+    second: {fileID: 2100000, guid: dad7994e878e47d4ba9b69eb6a755fac, type: 2}
   materials:
-    importMaterials: 1
+    importMaterials: 0
     materialName: 0
     materialSearch: 1
+    materialLocation: 0
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
@@ -28,6 +33,7 @@ ModelImporter:
     animationImportWarnings: 
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
     animationCompression: 1
     animationRotationError: 0.5
     animationPositionError: 0.5
@@ -52,6 +58,8 @@ ModelImporter:
     optimizeMeshForGPU: 1
     keepQuads: 0
     weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 1
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88

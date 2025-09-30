@@ -1,0 +1,10 @@
+{
+  "name": "PatternCube-Editor",
+  "references": [
+    "PatternCube"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": []
+}
